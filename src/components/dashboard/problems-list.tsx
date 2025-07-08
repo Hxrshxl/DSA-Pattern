@@ -64,7 +64,7 @@ export function ProblemsList() {
   useEffect(() => {
     loadProblems()
   }, [])
-
+//
   // Filter data
   const filteredData = data
     .filter((item) => {
@@ -75,6 +75,7 @@ export function ProblemsList() {
       if (searchTerm === "") return true
       return item.title.toLowerCase().includes(searchTerm.toLowerCase())
     })
+    
 
   // Pagination
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
