@@ -75,8 +75,7 @@ export default function DashboardClient() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
       >
-        {/* Pass the columns prop that ProblemsList expects */}
-        <ProblemsList columns={[]} />
+        <ProblemsList initialProgress={data.progress} />
       </motion.div>
     </div>
   )

@@ -1,123 +1,32 @@
 "use client"
 
-import {
-  type ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getPaginationRowModel,
-  useReactTable,
-} from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
-import type { Problem } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ExternalLink, Trash2 } from "lucide-react"
+import { ExternalLink, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Problem } from "@prisma/client"
 
-interface DataTableProps {
-  columns?: ColumnDef<Problem>[]
-  initialProgress?: Record<string, boolean>
-}
+type ProblemWithProgress = Problem & { progress: "todo" | "done" }
 
-export function ProblemsList({ columns = [], initialProgress = {} }: DataTableProps) {
-  const [data, setData] = useState<Problem[]>([])
+export function ProblemsList() {
+  const [data, setData] = useState<ProblemWithProgress[]>([])
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
-  const [progressFilter, setProgressFilter] = useState<string | undefined>(undefined)
+  const [progressFilter, setProgressFilter] = useState<string>("all")
   const [searchTerm, setSearchTerm] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
 
-  // Define default columns if none provided
-  const defaultColumns: ColumnDef<Problem>[] = [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
-      accessorKey: "title",
-      header: "Problem",
-      cell: ({ row }) => {
-        const problem = row.original
-        return (
-          <div className="flex items-center space-x-2">
-            <span className="font-medium">{problem.title}</span>
-            {problem.isPremium && (
-              <Badge variant="secondary" className="text-xs">
-                Premium
-              </Badge>
-            )}
-          </div>
-        )
-      },
-    },
-    {
-      accessorKey: "difficulty",
-      header: "Difficulty",
-      cell: ({ row }) => {
-        const difficulty = row.getValue("difficulty") as string
-        const colorMap = {
-          Easy: "text-green-600",
-          Medium: "text-yellow-600",
-          Hard: "text-red-600",
-        }
-        return (
-          <Badge variant="outline" className={colorMap[difficulty as keyof typeof colorMap]}>
-            {difficulty}
-          </Badge>
-        )
-      },
-    },
-    {
-      accessorKey: "progress",
-      header: "Status",
-      cell: ({ row }) => {
-        const progress = row.getValue("progress") as string
-        return (
-          <Badge variant={progress === "done" ? "default" : "secondary"}>
-            {progress === "done" ? "Completed" : "Todo"}
-          </Badge>
-        )
-      },
-    },
-    {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => {
-        const problem = row.original
-        return (
-          <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm" onClick={() => window.open(problem.url, "_blank")}>
-              <ExternalLink className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => deleteProblem(problem.id)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        )
-      },
-    },
-  ]
+  const itemsPerPage = 10
 
-  const actualColumns = columns.length > 0 ? columns : defaultColumns
-
+  const loadProblems = async () => {
+    setLoading(true)
   const loadProblems = async () => {
     setLoading(true)
     try {
@@ -125,7 +34,7 @@ export function ProblemsList({ columns = [], initialProgress = {} }: DataTablePr
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-        },
+        }
       })
 
       if (!response.ok) {
@@ -133,7 +42,13 @@ export function ProblemsList({ columns = [], initialProgress = {} }: DataTablePr
       }
 
       const result = await response.json()
-      setData(result)
+      // Add a local progress property if not present
+      setData(
+        result.map((problem: Problem) => ({
+          ...problem,
+          progress: "todo", // or load from localStorage or another source if needed
+        }))
+      )
     } catch (error) {
       console.error("Failed to load problems:", error)
       toast({
@@ -147,29 +62,24 @@ export function ProblemsList({ columns = [], initialProgress = {} }: DataTablePr
       setLoading(false)
     }
   }
-
-  useEffect(() => {
     loadProblems()
-  }, [])
+  }, 
 
-  const table = useReactTable({
-    data: data
-      .filter((item) => {
-        if (progressFilter === undefined || progressFilter === "all") {
-          return true
-        }
-        return item.progress === progressFilter
-      })
-      .filter((item) => {
-        if (searchTerm === "") {
-          return true
-        }
-        return item.title.toLowerCase().includes(searchTerm.toLowerCase())
-      }),
-    columns: actualColumns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-  })
+  // Filter data
+  const filteredData = data
+    .filter((item) => {
+      if (progressFilter === "all") return true
+      return item.progress === progressFilter
+    })
+    .filter((item) => {
+      if (searchTerm === "") return true
+      return item.title.toLowerCase().includes(searchTerm.toLowerCase())
+    })
+
+  // Pagination
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage)
 
   const deleteProblem = async (id: string) => {
     try {
@@ -227,92 +137,199 @@ export function ProblemsList({ columns = [], initialProgress = {} }: DataTablePr
     }
   }
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center py-4">
-        <Input
-          type="text"
-          placeholder="Search problems..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm mr-2"
-        />
-        <Select onValueChange={setProgressFilter} defaultValue={progressFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by progress" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="todo">Todo</SelectItem>
-            <SelectItem value="done">Done</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+  const toggleRowSelection = (id: string) => {
+    const newSelected = new Set(selectedRows)
+    if (newSelected.has(id)) {
+      newSelected.delete(id)
+    } else {
+      newSelected.add(id)
+    }
+    setSelectedRows(newSelected)
+  }
 
-      <div className="rounded-md border">
-        <div className="relative w-full overflow-auto">
-          <table className="w-full table-auto">
-            <thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <th key={header.id} className="px-4 py-2 text-left">
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
-                    )
-                  })}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={actualColumns.length} className="p-4 text-center">
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <Skeleton className="h-4 w-[200px]" />
-                      <Skeleton className="h-4 w-[250px]" />
-                      <Skeleton className="h-4 w-[150px]" />
-                    </div>
-                  </td>
-                </tr>
-              ) : table.getRowModel().rows.length === 0 ? (
-                <tr>
-                  <td colSpan={actualColumns.length} className="p-4 text-center italic">
-                    No problems found.
-                  </td>
-                </tr>
-              ) : (
-                table.getRowModel().rows.map((row) => (
-                  <tr key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-4 py-2">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-        <div className="flex items-center justify-end space-x-2 py-2 px-4">
-          <div className="flex-1 text-sm text-muted-foreground">
-            {table.getFilteredRowModel().rows.length} of {data.length} row(s)
+  const toggleAllSelection = () => {
+    if (selectedRows.size === paginatedData.length) {
+      setSelectedRows(new Set())
+    } else {
+      setSelectedRows(new Set(paginatedData.map((item) => item.id)))
+    }
+  }
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case "Easy":
+        return "text-green-600 border-green-600"
+      case "Medium":
+        return "text-yellow-600 border-yellow-600"
+      case "Hard":
+        return "text-red-600 border-red-600"
+      default:
+        return "text-gray-600 border-gray-600"
+    }
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Problems</CardTitle>
+          <CardDescription>Loading problems...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center space-x-4">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-[200px]" />
+                <Skeleton className="h-4 w-[100px]" />
+                <Skeleton className="h-4 w-[80px]" />
+              </div>
+            ))}
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-            Next
-          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Problems ({filteredData.length})</CardTitle>
+        <CardDescription>Manage and track your coding problems</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Filters */}
+        <div className="flex items-center space-x-4">
+          <Input
+            type="text"
+            placeholder="Search problems..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
+          />
+          <Select value={progressFilter} onValueChange={setProgressFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by progress" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="todo">Todo</SelectItem>
+              <SelectItem value="done">Done</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      </div>
-    </div>
+
+        {/* Table */}
+        <div className="rounded-md border">
+          <div className="relative w-full overflow-auto">
+            <table className="w-full table-auto">
+              <thead>
+                <tr className="border-b">
+                  <th className="px-4 py-2 text-left">
+                    <Checkbox
+                      checked={selectedRows.size === paginatedData.length && paginatedData.length > 0}
+                      onCheckedChange={toggleAllSelection}
+                      aria-label="Select all"
+                    />
+                  </th>
+                  <th className="px-4 py-2 text-left">Problem</th>
+                  <th className="px-4 py-2 text-left">Difficulty</th>
+                  <th className="px-4 py-2 text-left">Status</th>
+                  <th className="px-4 py-2 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedData.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                      No problems found.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedData.map((problem) => (
+                    <tr key={problem.id} className="border-b hover:bg-muted/50">
+                      <td className="px-4 py-2">
+                        <Checkbox
+                          checked={selectedRows.has(problem.id)}
+                          onCheckedChange={() => toggleRowSelection(problem.id)}
+                          aria-label="Select row"
+                        />
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">{problem.title}</span>
+                          {problem.isPremium && (
+                            <Badge variant="secondary" className="text-xs">
+                              Premium
+                            </Badge>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">
+                        <Badge variant="outline" className={getDifficultyColor(problem.difficulty)}>
+                          {problem.difficulty}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-2">
+                        <Badge
+                          variant={problem.progress === "done" ? "default" : "secondary"}
+                          className="cursor-pointer"
+                          onClick={() => toggleProblemStatus(problem.id, problem.progress)}
+                        >
+                          {problem.progress === "done" ? "Completed" : "Todo"}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="flex items-center space-x-2">
+                          <Button variant="ghost" size="sm" onClick={() => window.open(problem.url, "_blank")}>
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => deleteProblem(problem.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-2 border-t">
+              <div className="text-sm text-muted-foreground">
+                Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of{" "}
+                {filteredData.length} results
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                <span className="text-sm">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   )
 }
