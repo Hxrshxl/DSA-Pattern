@@ -47,6 +47,7 @@ export default function GoalsManager({ initialGoals }: GoalsManagerProps) {
     type: "daily" as const,
     target: 3,
   })
+
   const { toast } = useToast()
 
   const createGoal = async () => {
@@ -69,10 +70,10 @@ export default function GoalsManager({ initialGoals }: GoalsManagerProps) {
         description: "Your new goal has been set. Time to crush it!",
       })
     } catch (error) {
+      // Remove the variant property - use a different approach for error styling
       toast({
-        title: "Error",
+        title: "❌ Error",
         description: "Failed to create goal. Please try again.",
-        variant: "destructive",
       })
     }
   }
@@ -80,16 +81,14 @@ export default function GoalsManager({ initialGoals }: GoalsManagerProps) {
   const updateGoal = async (goalId: string, updates: Partial<Goal>) => {
     try {
       setGoals((prev) => prev.map((goal) => (goal.id === goalId ? { ...goal, ...updates } : goal)))
-
       toast({
         title: "Goal Updated",
         description: "Your goal has been successfully updated.",
       })
     } catch (error) {
       toast({
-        title: "Error",
+        title: "❌ Error",
         description: "Failed to update goal. Please try again.",
-        variant: "destructive",
       })
     }
   }
@@ -97,16 +96,14 @@ export default function GoalsManager({ initialGoals }: GoalsManagerProps) {
   const deleteGoal = async (goalId: string) => {
     try {
       setGoals((prev) => prev.filter((goal) => goal.id !== goalId))
-
       toast({
         title: "Goal Deleted",
         description: "Goal has been removed from your list.",
       })
     } catch (error) {
       toast({
-        title: "Error",
+        title: "❌ Error",
         description: "Failed to delete goal. Please try again.",
-        variant: "destructive",
       })
     }
   }
@@ -152,7 +149,6 @@ export default function GoalsManager({ initialGoals }: GoalsManagerProps) {
           <h1 className="text-3xl font-bold text-white">Goals & Targets</h1>
           <p className="text-gray-400 mt-2">Set and track your learning objectives to stay motivated</p>
         </div>
-
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700">
@@ -167,7 +163,6 @@ export default function GoalsManager({ initialGoals }: GoalsManagerProps) {
                 Set a new learning target to keep yourself motivated
               </DialogDescription>
             </DialogHeader>
-
             <div className="space-y-4">
               <div>
                 <Label htmlFor="title" className="text-white">
@@ -181,7 +176,6 @@ export default function GoalsManager({ initialGoals }: GoalsManagerProps) {
                   className="bg-white/5 border-white/10 text-white"
                 />
               </div>
-
               <div>
                 <Label htmlFor="description" className="text-white">
                   Description
@@ -194,7 +188,6 @@ export default function GoalsManager({ initialGoals }: GoalsManagerProps) {
                   className="bg-white/5 border-white/10 text-white"
                 />
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="type" className="text-white">
@@ -214,7 +207,6 @@ export default function GoalsManager({ initialGoals }: GoalsManagerProps) {
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div>
                   <Label htmlFor="target" className="text-white">
                     Target
@@ -229,7 +221,6 @@ export default function GoalsManager({ initialGoals }: GoalsManagerProps) {
                 </div>
               </div>
             </div>
-
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                 Cancel
@@ -259,11 +250,9 @@ export default function GoalsManager({ initialGoals }: GoalsManagerProps) {
                       {getGoalIcon(goal.type)}
                       <span className="ml-1 capitalize">{goal.type}</span>
                     </Badge>
-
                     <div className="flex items-center space-x-1">
                       {isCompleted && <CheckCircle2 className="h-4 w-4 text-green-400" />}
                       {isAtRisk && <AlertCircle className="h-4 w-4 text-red-400" />}
-
                       <Button
                         variant="ghost"
                         size="sm"
@@ -272,7 +261,6 @@ export default function GoalsManager({ initialGoals }: GoalsManagerProps) {
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
-
                       <Button
                         variant="ghost"
                         size="sm"
@@ -283,11 +271,9 @@ export default function GoalsManager({ initialGoals }: GoalsManagerProps) {
                       </Button>
                     </div>
                   </div>
-
                   <CardTitle className="text-white">{goal.title}</CardTitle>
                   <CardDescription className="text-gray-400">{goal.description}</CardDescription>
                 </CardHeader>
-
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
@@ -296,9 +282,7 @@ export default function GoalsManager({ initialGoals }: GoalsManagerProps) {
                         {goal.current}/{goal.target}
                       </span>
                     </div>
-
                     <Progress value={progressPercentage} className="h-2" />
-
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-gray-400">{progressPercentage.toFixed(0)}% complete</span>
                       {isCompleted && <span className="text-green-400 font-medium">🎉 Completed!</span>}
