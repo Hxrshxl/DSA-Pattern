@@ -5,6 +5,7 @@ import "./globals.css"
 import { ClerkProvider } from "@clerk/nextjs"
 import { ThemeProvider } from "@/components/theme-provider"
 import UserSync from "@/components/user-sync"
+import { Toaster } from "@/components/ui/sonner"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -27,7 +28,7 @@ export default function RootLayout({
             <div className="min-h-screen bg-black">
               <div className="relative">{children}</div>
             </div>
-            {/* <Toaster /> */}
+  <Toaster />
           </ThemeProvider>
         </body>
       </html>

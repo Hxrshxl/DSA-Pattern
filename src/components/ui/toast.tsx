@@ -10,7 +10,7 @@ import {
   type ToastProps,
 } from "sonner";
 
-// --- Custom Themed Toaster Component ---
+// --- Custom Themed <Toaster /> Component ---
 export function Toaster() {
   const { theme = "system" } = useTheme();
 
@@ -35,11 +35,11 @@ export function Toaster() {
   );
 }
 
-// --- Export `toast()` API ---
+// --- Re-export toast() API and helper types ---
 export const toast = baseToast;
 export type { ToastOptions, ToastProps };
 
-// --- Optional: Predefined shortcuts ---
+// --- Optional Utility Shortcuts ---
 export const toastSuccess = (message: string, options?: ToastOptions) =>
   baseToast.success(message, options);
 
