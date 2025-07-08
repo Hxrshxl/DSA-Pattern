@@ -1,12 +1,11 @@
-"use client";
+"use client"
 
-import { useEffect } from "react";
-import { motion } from "framer-motion";
-import DashboardLayout from "@/components/dashboard/dashboard-layout";
-import StatsOverview from "@/components/dashboard/stats-overview";
-import ProblemsList from "@/components/dashboard/problems-list";
-import { useUserData } from "@/lib/hooks/use-user-data";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect } from "react"
+import { motion } from "framer-motion"
+import StatsOverview from "@/components/dashboard/stats-overview"
+import { useUserData } from "@/lib/hooks/use-user-data"
+import { Skeleton } from "@/components/ui/skeleton"
+import { ProblemsList } from "./problems-list"
 
 function DashboardSkeleton() {
   return (
@@ -29,7 +28,7 @@ function DashboardSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 const defaultStats = {
@@ -45,20 +44,20 @@ const defaultStats = {
   level: "Bronze",
   xp: 0,
   nextLevelXp: 1000,
-};
+}
 
 export default function DashboardClient() {
-  const { data, loading, fetchStats, fetchProgress } = useUserData();
+  const { data, loading, fetchStats, fetchProgress } = useUserData()
 
   useEffect(() => {
-    if (!data.stats) fetchStats();
+    if (!data.stats) fetchStats()
     if (!data.progress || Object.keys(data.progress).length === 0) {
-      fetchProgress();
+      fetchProgress()
     }
-  }, [data.stats, data.progress, fetchStats, fetchProgress]);
+  }, [data.stats, data.progress, fetchStats, fetchProgress])
 
   if (loading.stats && !data.stats) {
-    return <DashboardSkeleton />;
+    return <DashboardSkeleton />
   }
 
   return (
@@ -70,13 +69,15 @@ export default function DashboardClient() {
       >
         <StatsOverview stats={data.stats ?? defaultStats} />
       </motion.div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
       >
-        <ProblemsList initialProgress={data.progress} />
+        {/* Pass the columns prop that ProblemsList expects */}
+        <ProblemsList columns={[]} />
       </motion.div>
     </div>
-  );
+  )
 }
