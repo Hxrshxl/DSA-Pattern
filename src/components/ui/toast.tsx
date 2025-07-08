@@ -2,17 +2,15 @@
 
 import * as React from "react";
 import {
-  Toast as SonnerToast,
-  ToastProps as SonnerToastProps,
-  ToastAction as SonnerToastAction,
+  Toaster,
+  toast,
+  ToastAction,
+  type ToastProps,
 } from "sonner";
 
-// Basic type re-exports
-export type ToastProps = SonnerToastProps;
-export type ToastActionElement = React.ReactElement<typeof SonnerToastAction>;
+// Export only the valid members
+export { Toaster, toast, ToastAction };
+export type { ToastProps };
 
-// Optional: you can export UI components too
-export {
-  SonnerToast as Toast,
-  SonnerToastAction as ToastAction,
-};
+// If you still need ToastActionElement:
+export type ToastActionElement = React.ReactElement<typeof ToastAction>;
