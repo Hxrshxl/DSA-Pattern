@@ -5,7 +5,10 @@ import { motion } from "framer-motion"
 import StatsOverview from "@/components/dashboard/stats-overview"
 import { useUserData } from "@/lib/hooks/use-user-data"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ProblemsList } from "./problems-list"
+
+interface ProblemsListProps {
+  initialProgress: Record<string, boolean>;
+}
 
 function DashboardSkeleton() {
   return (
@@ -45,7 +48,18 @@ const defaultStats = {
   xp: 0,
   nextLevelXp: 1000,
 }
-
+export function ProblemsList({ initialProgress }: ProblemsListProps) {
+  return (
+    <div>
+      {/* Render something with initialProgress */}
+      {Object.entries(initialProgress).map(([problemId, isSolved]) => (
+        <div key={problemId}>
+          Problem {problemId}: {isSolved ? "✅ Solved" : "❌ Unsolved"}
+        </div>
+      ))}
+    </div>
+  );
+}
 export default function DashboardClient() {
   const { data, loading, fetchStats, fetchProgress } = useUserData()
 
@@ -75,7 +89,7 @@ export default function DashboardClient() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
       >
-        <ProblemsList initialProgress={data.progress} />
+       <ProblemsList initialProgress={data.progress} />
       </motion.div>
     </div>
   )
