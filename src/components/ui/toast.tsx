@@ -1,16 +1,50 @@
+// src/components/ui/toast.tsx
 "use client";
 
 import * as React from "react";
+import { useTheme } from "next-themes";
 import {
-  Toaster,
-  toast,
-  ToastAction,
+  Toaster as BaseToaster,
+  toast as baseToast,
+  type ToastOptions,
   type ToastProps,
 } from "sonner";
 
-// Export only the valid members
-export { Toaster, toast, ToastAction };
-export type { ToastProps };
+// --- Custom Themed Toaster Component ---
+export function Toaster() {
+  const { theme = "system" } = useTheme();
 
-// If you still need ToastActionElement:
-export type ToastActionElement = React.ReactElement<typeof ToastAction>;
+  return (
+    <BaseToaster
+      theme={theme as ToastProps["theme"]}
+      position="top-right"
+      closeButton
+      className="toaster group"
+      toastOptions={{
+        classNames: {
+          toast:
+            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
+          description: "group-[.toast]:text-muted-foreground",
+          actionButton:
+            "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+          cancelButton:
+            "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+        },
+      }}
+    />
+  );
+}
+
+// --- Export `toast()` API ---
+export const toast = baseToast;
+export type { ToastOptions, ToastProps };
+
+// --- Optional: Predefined shortcuts ---
+export const toastSuccess = (message: string, options?: ToastOptions) =>
+  baseToast.success(message, options);
+
+export const toastError = (message: string, options?: ToastOptions) =>
+  baseToast.error(message, options);
+
+export const toastInfo = (message: string, options?: ToastOptions) =>
+  baseToast(message, { ...options, icon: "ℹ️" });

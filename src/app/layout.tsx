@@ -3,7 +3,6 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { ClerkProvider } from "@clerk/nextjs"
-import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "@/components/theme-provider"
 import UserSync from "@/components/user-sync"
 
@@ -28,7 +27,7 @@ export default function RootLayout({
             <div className="min-h-screen bg-black">
               <div className="relative">{children}</div>
             </div>
-            <Toaster />
+            {/* <Toaster /> */}
           </ThemeProvider>
         </body>
       </html>
