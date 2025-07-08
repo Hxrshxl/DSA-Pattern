@@ -13,8 +13,9 @@ export async function POST(request: NextRequest) {
 
     console.log("User sync: Processing for user:", userId)
 
-    // Get user from Clerk using the imported clerkClient
-    const clerkUser = await clerkClient.users.getUser(userId)
+    // Get user from Clerk - clerkClient is a function in newer versions
+    const client = await clerkClient()
+    const clerkUser = await client.users.getUser(userId)
     const email = clerkUser.emailAddresses[0]?.emailAddress || `user-${userId}@example.com`
 
     console.log("User sync: Email found:", email)
