@@ -1,0 +1,188 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Gamification fields
+  level           String @default("Bronze")
+  xp              Int    @default(0)
+  currentStreak   Int    @default(0) @map("current_streak")
+  longestStreak   Int    @default(0) @map("longest_streak")
+  totalStudyTime  Int    @default(0) @map("total_study_time") // in minutes
+
+  // Preferences
+  dailyGoal            Int     @default(3) @map("daily_goal")
+  weeklyGoal           Int     @default(15) @map("weekly_goal")
+  notificationsEnabled Boolean @default(true) @map("notifications_enabled")
+
+  // Relations
+  progress         UserProgress[]
+  notes            Note[]
+  goals            Goal[]
+  studySessions    StudySession[]
+  patternMastery   PatternMastery[]
+  revisionSchedule RevisionSchedule[]
+
+  @@map("users")
+}
+
+model Problem {
+  id             String   @id // ID from CSV
+  title          String   // Title from CSV
+  url            String   // URL from CSV
+  isPremium      Boolean  @default(false) @map("is_premium") // Is Premium from CSV
+  acceptanceRate Decimal  @map("acceptance_rate") @db.Decimal(5, 4) // Acceptance % from CSV
+  difficulty     Difficulty // Difficulty from CSV
+  frequency      Decimal  @map("frequency") @db.Decimal(5, 4) // Frequency % from CSV
+  topics         String[] // Topics from CSV (semicolon separated)
+  pattern        String?  // Pattern from CSV
+  questionNo     Int      @map("question_no") // Question No. from CSV
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  progress         UserProgress[]
+  notes            Note[]
+  studySessions    StudySession[]
+  revisionSchedule RevisionSchedule[]
+
+  @@map("problems")
+}
+
+model UserProgress {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  problemId String    @map("problem_id")
+  solved    Boolean   @default(false)
+  solvedAt  DateTime? @map("solved_at")
+  timeSpent Int       @default(0) @map("time_spent") // in minutes
+  attempts  Int       @default(0)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId])
+  @@map("user_progress")
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  problemId String   @map("problem_id")
+  type      NoteType
+  content   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId, type])
+  @@map("notes")
+}
+
+model Goal {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  title       String
+  description String?
+  type        GoalType
+  target      Int
+  current     Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("goals")
+}
+
+model StudySession {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  problemId   String   @map("problem_id")
+  duration    Int // in minutes
+  completed   Boolean  @default(false)
+  sessionDate DateTime @default(now()) @map("session_date") @db.Date
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@map("study_sessions")
+}
+
+model PatternMastery {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  pattern           String
+  level             String   @default("Bronze")
+  problemsSolved    Int      @default(0) @map("problems_solved")
+  totalProblems     Int      @default(0) @map("total_problems")
+  masteryPercentage Decimal  @default(0.00) @map("mastery_percentage") @db.Decimal(5, 2)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pattern])
+  @@map("pattern_mastery")
+}
+
+model RevisionSchedule {
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  problemId      String   @map("problem_id")
+  nextReviewDate DateTime @map("next_review_date") @db.Date
+  intervalDays   Int      @default(1) @map("interval_days")
+  easeFactor     Decimal  @default(2.50) @map("ease_factor") @db.Decimal(3, 2)
+  repetitions    Int      @default(0)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@map("revision_schedule")
+}
+
+// Enums
+enum Difficulty {
+  Easy
+  Medium
+  Hard
+}
+
+enum NoteType {
+  general
+  mistakes
+  insights
+}
+
+enum GoalType {
+  daily
+  weekly
+  monthly
+}
