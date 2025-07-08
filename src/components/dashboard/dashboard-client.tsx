@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import DashboardLayout from "@/components/dashboard/dashboard-layout"
-import StatsOverview from "@/components/dashboard/stats-overview"
-import ProblemsList from "@/components/dashboard/problems-list"
-import { useUserData } from "@/lib/hooks/use-user-data"
-import { motion } from "framer-motion"
-import { Skeleton } from "@/components/ui/skeleton"
+import { useEffect } from "react";
+import { motion } from "framer-motion";
+import DashboardLayout from "@/components/dashboard/dashboard-layout";
+import StatsOverview from "@/components/dashboard/stats-overview";
+import ProblemsList from "@/components/dashboard/problems-list";
+import { useUserData } from "@/lib/hooks/use-user-data";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function DashboardSkeleton() {
   return (
@@ -29,22 +29,36 @@ function DashboardSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
+const defaultStats = {
+  totalSolved: 0,
+  totalProblems: 0,
+  easyCompleted: 0,
+  mediumCompleted: 0,
+  hardCompleted: 0,
+  currentStreak: 0,
+  longestStreak: 0,
+  studyTimeToday: 0,
+  weeklyGoalProgress: 0,
+  level: "Bronze",
+  xp: 0,
+  nextLevelXp: 1000,
+};
+
 export default function DashboardClient() {
-  const { data, loading, fetchStats, fetchProgress } = useUserData()
+  const { data, loading, fetchStats, fetchProgress } = useUserData();
 
   useEffect(() => {
-    // Fetch data if not already cached
-    if (!data.stats) fetchStats()
-    if (Object.keys(data.progress).length === 0) fetchProgress()
-  }, [data.stats, data.progress, fetchStats, fetchProgress])
+    if (!data.stats) fetchStats();
+    if (!data.progress || Object.keys(data.progress).length === 0) {
+      fetchProgress();
+    }
+  }, [data.stats, data.progress, fetchStats, fetchProgress]);
 
   if (loading.stats && !data.stats) {
-    return (
-      <DashboardSkeleton />
-    )
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -54,24 +68,7 @@ export default function DashboardClient() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1 }}
       >
-        <StatsOverview
-          stats={
-            data.stats || {
-              totalSolved: 0,
-              totalProblems: 0,
-              easyCompleted: 0,
-              mediumCompleted: 0,
-              hardCompleted: 0,
-              currentStreak: 0,
-              longestStreak: 0,
-              studyTimeToday: 0,
-              weeklyGoalProgress: 0,
-              level: "Bronze",
-              xp: 0,
-              nextLevelXp: 1000,
-            }
-          }
-        />
+        <StatsOverview stats={data.stats ?? defaultStats} />
       </motion.div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -81,5 +78,5 @@ export default function DashboardClient() {
         <ProblemsList initialProgress={data.progress} />
       </motion.div>
     </div>
-  )
+  );
 }
