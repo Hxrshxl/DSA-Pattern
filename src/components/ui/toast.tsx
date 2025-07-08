@@ -33,15 +33,28 @@ export function Toaster() {
   );
 }
 
-// --- Re-export toast() API ---
+// --- Re-export `toast()` API ---
 export const toast = baseToast;
 
 // --- Optional Utility Shortcuts ---
-export const toastSuccess = (message: string, options?: Parameters<typeof baseToast>[1]) =>
-  baseToast.success(message, options);
+export const toastSuccess = (
+  message: string,
+  options?: Parameters<typeof baseToast>[1]
+) => baseToast.success(message, options);
 
-export const toastError = (message: string, options?: Parameters<typeof baseToast>[1]) =>
-  baseToast.error(message, options);
+export const toastError = (
+  message: string,
+  options?: Parameters<typeof baseToast>[1]
+) => baseToast.error(message, options);
 
-export const toastInfo = (message: string, options?: Parameters<typeof baseToast>[1]) =>
-  baseToast(message, { ...options, icon: "ℹ️" });
+export const toastInfo = (
+  message: string,
+  options?: Parameters<typeof baseToast>[1]
+) =>
+  baseToast(message, {
+    ...options,
+    icon: "ℹ️",
+  });
+
+// --- ✅ Export type used by use-toast.ts
+export type ToastActionElement = React.ReactElement;
