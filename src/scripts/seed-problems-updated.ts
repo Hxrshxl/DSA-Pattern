@@ -130,7 +130,7 @@ async function seedProblemsFromNewCSV() {
     console.log(`Unique patterns: ${patterns.length}`)
     console.log(
       "Pattern list:",
-      patterns.map((p) => p.pattern),
+      patterns.map((p: { pattern: string | null }) => p.pattern),
     )
     console.log("Difficulty distribution:", difficulties)
 
