@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
@@ -14,7 +13,8 @@
     "seed-problems": "tsx scripts/seed-problems-updated.ts",
     "analyze-csv": "tsx scripts/analyze-csv.ts",
     "analyze-csv-js": "node scripts/analyze-csv.js",
-    "seed-problems-js": "node scripts/seed-problems-updated.js"
+    "seed-problems-js": "node scripts/seed-problems-updated.js",
+    "build": "prisma generate && next build"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.0.0",
