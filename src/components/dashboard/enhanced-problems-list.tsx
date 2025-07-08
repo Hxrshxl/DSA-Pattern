@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ExternalLink, ChevronLeft, ChevronRight, Check, Clock, Crown, Search } from "lucide-react"
+import { ExternalLink, ChevronLeft, ChevronRight, Check, Clock, Crown, Search, Star, Trophy } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
@@ -24,7 +24,7 @@ type ProblemWithProgress = Problem & {
   progress: "todo" | "done"
 }
 
-export function ProblemsList() {
+export function EnhancedProblemsList() {
   const [data, setData] = useState<ProblemWithProgress[]>([])
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
@@ -34,7 +34,7 @@ export function ProblemsList() {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
 
-  const itemsPerPage =358
+  const itemsPerPage = 358
 
   // Load progress from localStorage
   const loadProgressFromStorage = () => {
@@ -184,13 +184,13 @@ export function ProblemsList() {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "Easy":
-        return "bg-green-100 text-green-800 border-green-200"
+        return "bg-green-500/20 text-green-400 border-green-500/30"
       case "Medium":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
       case "Hard":
-        return "bg-red-100 text-red-800 border-red-200"
+        return "bg-red-500/20 text-red-400 border-red-500/30"
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
+        return "bg-gray-500/20 text-gray-400 border-gray-500/30"
     }
   }
 
@@ -198,22 +198,38 @@ export function ProblemsList() {
   const totalCount = data.length
   const progressPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
 
+  // Calculate star rating based on completion
+  const getStarRating = (completed: number, total: number) => {
+    const percentage = (completed / total) * 100
+    if (percentage >= 80) return 5
+    if (percentage >= 60) return 4
+    if (percentage >= 40) return 3
+    if (percentage >= 20) return 2
+    return 1
+  }
+
+  const renderStars = (count: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star key={i} className={`h-4 w-4 ${i < count ? "text-yellow-400 fill-yellow-400" : "text-gray-600"}`} />
+    ))
+  }
+
   if (loading) {
     return (
-      <Card className="w-full">
+      <Card className="w-full bg-black border-white/10">
         <CardHeader>
-          <CardTitle>Loading Problems...</CardTitle>
-          <CardDescription>Please wait while we fetch your coding problems</CardDescription>
+          <CardTitle className="text-white">Loading Problems...</CardTitle>
+          <CardDescription className="text-gray-400">Please wait while we fetch your coding problems</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="flex items-center space-x-4 p-3 border rounded-lg">
-                <Skeleton className="h-4 w-4" />
-                <Skeleton className="h-4 w-4" />
-                <Skeleton className="h-4 w-[300px]" />
-                <Skeleton className="h-4 w-[80px]" />
-                <Skeleton className="h-4 w-[100px]" />
+              <div key={i} className="flex items-center space-x-4 p-3 border border-white/10 rounded-lg bg-gray-900/50">
+                <Skeleton className="h-4 w-4 bg-white/10" />
+                <Skeleton className="h-4 w-4 bg-white/10" />
+                <Skeleton className="h-4 w-[300px] bg-white/10" />
+                <Skeleton className="h-4 w-[80px] bg-white/10" />
+                <Skeleton className="h-4 w-[100px] bg-white/10" />
               </div>
             ))}
           </div>
@@ -224,77 +240,89 @@ export function ProblemsList() {
 
   return (
     <div className="w-full space-y-6">
-      {/* Stats Header */}
+      {/* Enhanced Stats Header */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/20">
           <CardContent className="p-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{totalCount}</div>
-              <div className="text-sm text-muted-foreground">Total Problems</div>
+              <div className="text-2xl font-bold text-blue-400 mb-2">{totalCount}</div>
+              <div className="text-sm text-gray-400 mb-2">Total Problems</div>
+              <div className="flex justify-center space-x-1">{renderStars(5)}</div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gradient-to-br from-green-900/20 to-black border border-green-500/20">
           <CardContent className="p-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{completedCount}</div>
-              <div className="text-sm text-muted-foreground">Completed</div>
+              <div className="text-2xl font-bold text-green-400 mb-2">{completedCount}</div>
+              <div className="text-sm text-gray-400 mb-2">Completed</div>
+              <div className="flex justify-center space-x-1">
+                {renderStars(getStarRating(completedCount, totalCount))}
+              </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gradient-to-br from-orange-900/20 to-black border border-orange-500/20">
           <CardContent className="p-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">{totalCount - completedCount}</div>
-              <div className="text-sm text-muted-foreground">Remaining</div>
+              <div className="text-2xl font-bold text-orange-400 mb-2">{totalCount - completedCount}</div>
+              <div className="text-sm text-gray-400 mb-2">Remaining</div>
+              <div className="flex justify-center space-x-1">
+                {renderStars(Math.max(1, 5 - getStarRating(completedCount, totalCount)))}
+              </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/20">
           <CardContent className="p-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">{progressPercentage}%</div>
-              <div className="text-sm text-muted-foreground">Progress</div>
+              <div className="text-2xl font-bold text-purple-400 mb-2">{progressPercentage}%</div>
+              <div className="text-sm text-gray-400 mb-2">Progress</div>
+              <div className="flex justify-center space-x-1">{renderStars(getStarRating(progressPercentage, 100))}</div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Problems Card */}
-      <Card className="w-full">
-        <CardHeader>
+      {/* Main Problems Card - Enhanced Dark Theme */}
+      <Card className="w-full bg-black border-white/10">
+        <CardHeader className="bg-gradient-to-r from-gray-900 to-black border-b border-white/10">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Trophy className="h-6 w-6 text-yellow-400" />
                 Coding Problems
-                <Badge variant="outline">{filteredData.length} shown</Badge>
+                <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                  {filteredData.length} shown
+                </Badge>
+                <div className="flex space-x-1 ml-2">{renderStars(getStarRating(completedCount, totalCount))}</div>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-gray-400">
                 Track your progress through {totalCount} coding problems • {completedCount} completed so far
               </CardDescription>
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 bg-black">
           {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 type="text"
                 placeholder="Search problems..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 bg-gray-900 border-white/20 text-white placeholder-gray-400"
               />
             </div>
 
             <Select value={progressFilter} onValueChange={setProgressFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px] bg-gray-900 border-white/20 text-white">
                 <SelectValue placeholder="Filter by progress" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-gray-900 border-white/20">
                 <SelectItem value="all">All Problems</SelectItem>
                 <SelectItem value="todo">Todo ({data.filter((p) => p.progress === "todo").length})</SelectItem>
                 <SelectItem value="done">Completed ({completedCount})</SelectItem>
@@ -302,10 +330,10 @@ export function ProblemsList() {
             </Select>
 
             <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px] bg-gray-900 border-white/20 text-white">
                 <SelectValue placeholder="Filter by difficulty" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-gray-900 border-white/20">
                 <SelectItem value="all">All Difficulties</SelectItem>
                 <SelectItem value="Easy">Easy</SelectItem>
                 <SelectItem value="Medium">Medium</SelectItem>
@@ -316,43 +344,54 @@ export function ProblemsList() {
 
           {/* Bulk Actions */}
           {selectedRows.size > 0 && (
-            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <span className="text-sm font-medium text-blue-900">
+            <div className="flex items-center justify-between p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+              <span className="text-sm font-medium text-blue-400">
                 {selectedRows.size} problem{selectedRows.size > 1 ? "s" : ""} selected
               </span>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={bulkMarkComplete}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={bulkMarkComplete}
+                  className="bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30"
+                >
                   Mark as Complete
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setSelectedRows(new Set())}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedRows(new Set())}
+                  className="bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30"
+                >
                   Clear Selection
                 </Button>
               </div>
             </div>
           )}
 
-          {/* Problems List */}
+          {/* Problems List - Enhanced Dark Theme */}
           <div className="space-y-2">
             {/* Header */}
-            <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg font-medium text-sm">
+            <div className="flex items-center gap-4 p-3 bg-gray-900 rounded-lg font-medium text-sm border border-white/10">
               <div className="w-8">
                 <Checkbox
                   checked={selectedRows.size === paginatedData.length && paginatedData.length > 0}
                   onCheckedChange={toggleAllSelection}
                   aria-label="Select all"
+                  className="border-white/30"
                 />
               </div>
-              <div className="w-8">Status</div>
-              <div className="flex-1">Problem</div>
-              <div className="w-20">Difficulty</div>
-              <div className="w-24">Progress</div>
-              <div className="w-20">Actions</div>
+              <div className="w-8 text-gray-300">Status</div>
+              <div className="flex-1 text-gray-300">Problem</div>
+              <div className="w-20 text-gray-300">Difficulty</div>
+              <div className="w-24 text-gray-300">Progress</div>
+              <div className="w-20 text-gray-300">Actions</div>
             </div>
 
             {paginatedData.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-muted-foreground text-lg mb-2">No problems found</div>
-                <div className="text-sm text-muted-foreground">
+              <div className="text-center py-12 bg-gray-900/50 rounded-lg border border-white/10">
+                <div className="text-gray-400 text-lg mb-2">No problems found</div>
+                <div className="text-sm text-gray-500">
                   {searchTerm ? "Try adjusting your search terms" : "No problems match the current filter"}
                 </div>
               </div>
@@ -361,9 +400,11 @@ export function ProblemsList() {
                 <div
                   key={problem.id}
                   className={cn(
-                    "flex items-center gap-4 p-3 rounded-lg border transition-all hover:shadow-sm",
-                    problem.progress === "done" ? "bg-green-50 border-green-200" : "bg-white hover:bg-gray-50",
-                    selectedRows.has(problem.id) && "ring-2 ring-blue-500",
+                    "flex items-center gap-4 p-3 rounded-lg border transition-all hover:shadow-lg",
+                    problem.progress === "done"
+                      ? "bg-green-500/10 border-green-500/20 hover:bg-green-500/20"
+                      : "bg-gray-900/80 border-white/10 hover:bg-gray-800/80 hover:border-white/20",
+                    selectedRows.has(problem.id) && "ring-2 ring-blue-500/50",
                   )}
                 >
                   {/* Selection */}
@@ -372,6 +413,7 @@ export function ProblemsList() {
                       checked={selectedRows.has(problem.id)}
                       onCheckedChange={() => toggleRowSelection(problem.id)}
                       aria-label="Select problem"
+                      className="border-white/30"
                     />
                   </div>
 
@@ -384,7 +426,7 @@ export function ProblemsList() {
                         "w-6 h-6 rounded-full p-0 transition-all",
                         problem.progress === "done"
                           ? "bg-green-500 hover:bg-green-600 text-white"
-                          : "border-2 border-gray-300 hover:border-green-500",
+                          : "border-2 border-gray-500 hover:border-green-500 bg-transparent",
                       )}
                       onClick={() => toggleProblemStatus(problem.id, problem.progress)}
                     >
@@ -399,17 +441,20 @@ export function ProblemsList() {
                   {/* Problem Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground font-mono">#{startIndex + index + 1}</span>
+                      <span className="text-sm text-gray-400 font-mono">#{startIndex + index + 1}</span>
                       <span
                         className={cn(
                           "font-medium truncate",
-                          problem.progress === "done" && "line-through text-muted-foreground",
+                          problem.progress === "done" ? "line-through text-gray-500" : "text-white",
                         )}
                       >
                         {problem.title}
                       </span>
                       {problem.isPremium && (
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge
+                          variant="secondary"
+                          className="text-xs bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                        >
                           <Crown className="h-3 w-3 mr-1" />
                           Premium
                         </Badge>
@@ -426,7 +471,15 @@ export function ProblemsList() {
 
                   {/* Progress */}
                   <div className="w-24">
-                    <Badge variant={problem.progress === "done" ? "default" : "secondary"} className="text-xs">
+                    <Badge
+                      variant={problem.progress === "done" ? "default" : "secondary"}
+                      className={cn(
+                        "text-xs",
+                        problem.progress === "done"
+                          ? "bg-green-500/20 text-green-400 border-green-500/30"
+                          : "bg-gray-500/20 text-gray-400 border-gray-500/30",
+                      )}
+                    >
                       {problem.progress === "done" ? "Completed" : "Todo"}
                     </Badge>
                   </div>
@@ -437,7 +490,7 @@ export function ProblemsList() {
                       variant="ghost"
                       size="sm"
                       onClick={() => window.open(problem.url, "_blank")}
-                      className="h-6 w-6 p-0"
+                      className="h-6 w-6 p-0 text-gray-400 hover:text-white"
                       title="Open problem"
                     >
                       <ExternalLink className="h-3 w-3" />
@@ -450,8 +503,8 @@ export function ProblemsList() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-4 border-t">
-              <div className="text-sm text-muted-foreground">
+            <div className="flex items-center justify-between pt-4 border-t border-white/10">
+              <div className="text-sm text-gray-400">
                 Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of{" "}
                 {filteredData.length} results
               </div>
@@ -461,6 +514,7 @@ export function ProblemsList() {
                   size="sm"
                   onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
+                  className="bg-gray-900 border-white/20 text-white hover:bg-gray-800"
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Previous
@@ -486,7 +540,12 @@ export function ProblemsList() {
                         variant={currentPage === pageNum ? "default" : "outline"}
                         size="sm"
                         onClick={() => setCurrentPage(pageNum)}
-                        className="w-8 h-8 p-0"
+                        className={cn(
+                          "w-8 h-8 p-0",
+                          currentPage === pageNum
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-900 border-white/20 text-white hover:bg-gray-800",
+                        )}
                       >
                         {pageNum}
                       </Button>
@@ -498,6 +557,7 @@ export function ProblemsList() {
                   size="sm"
                   onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
+                  className="bg-gray-900 border-white/20 text-white hover:bg-gray-800"
                 >
                   Next
                   <ChevronRight className="h-4 w-4 ml-1" />

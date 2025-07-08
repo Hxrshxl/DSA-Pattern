@@ -30,7 +30,7 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <Badge className="mb-6 bg-purple-500/20 text-purple-300 border-purple-500/30">
             <Sparkles className="h-4 w-4 mr-2 icon-yellow" />
-            Now with Gamification & AI-Powered Learning
+            Hey..Hey..Heyyy!!!
           </Badge>
           <h1 className="text-6xl md:text-8xl font-bold text-white mb-6 leading-tight">
             Master DSA with
