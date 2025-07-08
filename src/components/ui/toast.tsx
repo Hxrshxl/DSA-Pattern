@@ -1,4 +1,3 @@
-// src/components/ui/toast.tsx
 "use client";
 
 import * as React from "react";
@@ -6,8 +5,7 @@ import { useTheme } from "next-themes";
 import {
   Toaster as BaseToaster,
   toast as baseToast,
-  type ToastOptions,
-  type ToastProps,
+  type ToasterProps,
 } from "sonner";
 
 // --- Custom Themed <Toaster /> Component ---
@@ -16,7 +14,7 @@ export function Toaster() {
 
   return (
     <BaseToaster
-      theme={theme as ToastProps["theme"]}
+      theme={theme as ToasterProps["theme"]}
       position="top-right"
       closeButton
       className="toaster group"
@@ -35,16 +33,15 @@ export function Toaster() {
   );
 }
 
-// --- Re-export toast() API and helper types ---
+// --- Re-export toast() API ---
 export const toast = baseToast;
-export type { ToastOptions, ToastProps };
 
 // --- Optional Utility Shortcuts ---
-export const toastSuccess = (message: string, options?: ToastOptions) =>
+export const toastSuccess = (message: string, options?: Parameters<typeof baseToast>[1]) =>
   baseToast.success(message, options);
 
-export const toastError = (message: string, options?: ToastOptions) =>
+export const toastError = (message: string, options?: Parameters<typeof baseToast>[1]) =>
   baseToast.error(message, options);
 
-export const toastInfo = (message: string, options?: ToastOptions) =>
+export const toastInfo = (message: string, options?: Parameters<typeof baseToast>[1]) =>
   baseToast(message, { ...options, icon: "ℹ️" });
