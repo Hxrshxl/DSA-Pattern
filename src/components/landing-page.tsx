@@ -47,6 +47,7 @@ export default function LandingPage() {
                 Start Learning Free
               </Button>
             </SignInButton>
+    {/* hello */}
             <Button
               size="lg"
               variant="outline"
