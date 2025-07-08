@@ -27,8 +27,6 @@ export function ProblemsList() {
 
   const loadProblems = async () => {
     setLoading(true)
-  const loadProblems = async () => {
-    setLoading(true)
     try {
       const response = await fetch("/api/problems", {
         method: "GET",
@@ -62,8 +60,10 @@ export function ProblemsList() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
     loadProblems()
-  }, 
+  }, [])
 
   // Filter data
   const filteredData = data
@@ -87,7 +87,7 @@ export function ProblemsList() {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-        },
+        }
       })
 
       if (!response.ok) {
