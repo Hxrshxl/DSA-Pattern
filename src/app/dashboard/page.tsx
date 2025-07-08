@@ -46,6 +46,24 @@ type Problem = {
   videoUrl?: string
 }
 
+function FrequencyStars({ frequency }: { frequency: number }) {
+  return (
+    <div className="flex items-center gap-1">
+      <span className="text-gray-400">Frequency:</span>
+      <div className="flex">
+        {Array.from({ length: 5 }, (_, i) => (
+          <Star
+            key={i}
+            className={`h-3 w-3 ${
+              i < frequency ? "text-yellow-400 fill-yellow-400" : "text-gray-600"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { data, loading } = useUserData()
   const [problemsByPattern, setProblemsByPattern] = useState<{ [pattern: string]: Problem[] }>({})
@@ -442,20 +460,8 @@ export default function DashboardPage() {
                                   </div>
                                 )}
 
-                                {problem.frequency && (
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-gray-400">Frequency:</span>
-                                    <div className="flex">
-                                      {Array.from({ length: 5 }, (_, i) => (
-                                        <Star
-                                          key={i}
-                                          className={`h-3 w-3 ${
-                                            i < problem.frequency ? "text-yellow-400 fill-yellow-400" : "text-gray-600"
-                                          }`}
-                                        />
-                                      ))}
-                                    </div>
-                                  </div>
+                                {typeof problem.frequency === "number" && (
+                                  <FrequencyStars frequency={problem.frequency} />
                                 )}
 
                                 {problem.timeComplexity && (
