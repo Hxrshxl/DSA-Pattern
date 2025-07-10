@@ -93,8 +93,7 @@ export function EnhancedProblemsList() {
       console.error("Failed to load problems:", error)
       toast({
         title: "Failed to load problems",
-        description: "Please check your connection and try again.",
-        variant: "destructive",
+        description: "Please check your connection and try again."
       })
     } finally {
       setLoading(false)
