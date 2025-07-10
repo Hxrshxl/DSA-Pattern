@@ -1,6 +1,12 @@
 const { PrismaClient } = require("@prisma/client")
 
-const prisma = new PrismaClient()
+// Only declare PrismaClient if not already declared
+let prisma
+try {
+  prisma = require('@prisma/client').PrismaClient ? new (require('@prisma/client').PrismaClient)() : prisma
+} catch (e) {
+  if (!prisma) throw e
+}
 
 async function fixDatabase() {
   try {
@@ -88,3 +94,27 @@ async function fixDatabase() {
 }
 
 fixDatabase()
+
+// Script to fix solvedAt for all solved problems with null solvedAt
+async function fixSolvedAt() {
+  const now = new Date()
+  const updated = await prisma.userProgress.updateMany({
+    where: {
+      solved: true,
+      solvedAt: null,
+    },
+    data: {
+      solvedAt: now,
+    },
+  })
+  console.log(`Updated ${updated.count} solved problems with missing solvedAt.`)
+  await prisma.$disconnect()
+}
+
+if (require.main === module) {
+  fixSolvedAt().catch(e => {
+    console.error(e)
+    prisma.$disconnect()
+    process.exit(1)
+  })
+}

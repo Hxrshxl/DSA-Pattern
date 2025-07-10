@@ -385,6 +385,47 @@ export async function toggleProblemProgress(userId: string, problemId: string, s
       },
     })
 
+    // Fetch problem details (pattern, difficulty)
+    const problem = await prisma.problem.findUnique({
+      where: { id: problemId },
+      select: { pattern: true, difficulty: true },
+    })
+
+    if (problem?.pattern) {
+      // Update PatternMastery for this user and pattern
+      const mastery = await prisma.patternMastery.findUnique({
+        where: { userId_pattern: { userId, pattern: problem.pattern } },
+      })
+      // Count solved problems for this pattern
+      const solvedCount = await prisma.userProgress.count({
+        where: {
+          userId,
+          solved: true,
+          problem: { pattern: problem.pattern },
+        },
+      })
+      // Count total problems for this pattern
+      const totalCount = await prisma.problem.count({
+        where: { pattern: problem.pattern },
+      })
+      const masteryPercentage = totalCount > 0 ? (solvedCount / totalCount) * 100 : 0
+      await prisma.patternMastery.upsert({
+        where: { userId_pattern: { userId, pattern: problem.pattern } },
+        update: {
+          problemsSolved: solvedCount,
+          totalProblems: totalCount,
+          masteryPercentage,
+        },
+        create: {
+          userId,
+          pattern: problem.pattern,
+          problemsSolved: solvedCount,
+          totalProblems: totalCount,
+          masteryPercentage,
+        },
+      })
+    }
+
     // Update user XP and streak if solved
     if (solved) {
       await updateUserXP(userId, 10)
@@ -396,6 +437,41 @@ export async function toggleProblemProgress(userId: string, problemId: string, s
     console.error("Database: Error in toggleProblemProgress:", error)
     throw error
   }
+}
+
+// Helper to compute difficulty trends for analytics
+export async function getUserDifficultyTrends(userId: string) {
+  // Get all solved problems for this user, grouped by month and difficulty
+  const solvedProblems = await prisma.userProgress.findMany({
+    where: { userId, solved: true },
+    select: {
+      solvedAt: true,
+      problem: { select: { difficulty: true } },
+    },
+  })
+  // Group by month and difficulty
+  const trends: Record<string, { easy: number; medium: number; hard: number }> = {}
+  const today = new Date()
+  solvedProblems.forEach((entry) => {
+    const date = entry.solvedAt ? new Date(entry.solvedAt) : today
+    const month = date.toLocaleString("default", { month: "short" })
+    const year = date.getFullYear()
+    const key = `${month} ${year}`
+    const difficulty = entry.problem?.difficulty || "Easy"
+    if (!trends[key]) trends[key] = { easy: 0, medium: 0, hard: 0 }
+    if (difficulty === "Easy") trends[key].easy++
+    else if (difficulty === "Medium") trends[key].medium++
+    else if (difficulty === "Hard") trends[key].hard++
+  })
+  // Return as array sorted by date (limit to last 6 months)
+  const sortedKeys = Object.keys(trends).sort((a, b) => {
+    const [ma, ya] = a.split(" ");
+    const [mb, yb] = b.split(" ");
+    const da = new Date(`${ma} 1, ${ya}`)
+    const db = new Date(`${mb} 1, ${yb}`)
+    return da.getTime() - db.getTime()
+  })
+  return sortedKeys.slice(-6).map((key) => ({ month: key, ...trends[key] }))
 }
 
 // Helper functions
@@ -592,31 +668,33 @@ export async function getPatternMastery(userId: string) {
   }
 }
 
+// Update getWeeklyActivity to count solved problems even if solvedAt is missing
 export async function getWeeklyActivity(userId: string) {
   try {
     const weekStart = new Date()
     weekStart.setDate(weekStart.getDate() - 7)
     weekStart.setHours(0, 0, 0, 0)
 
-    const sessions = await prisma.studySession.findMany({
+    // Get all solved problems for this user in the last week, or with missing solvedAt
+    const progress = await prisma.userProgress.findMany({
       where: {
         userId,
-        sessionDate: {
-          gte: weekStart,
-        },
+        solved: true,
       },
       select: {
-        sessionDate: true,
-        duration: true,
+        solvedAt: true,
       },
     })
 
-    const activityMap: Record<string, number> = {}
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-
-    sessions.forEach((session) => {
-      const dayName = days[session.sessionDate.getDay()]
-      activityMap[dayName] = (activityMap[dayName] || 0) + 1
+    const activityMap: Record<string, number> = {}
+    const today = new Date()
+    progress.forEach((entry) => {
+      let date = entry.solvedAt ? new Date(entry.solvedAt) : today
+      if (date >= weekStart) {
+        const dayName = days[date.getDay()]
+        activityMap[dayName] = (activityMap[dayName] || 0) + 1
+      }
     })
 
     return days.map((day) => ({

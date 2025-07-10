@@ -38,7 +38,9 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
     percentage: (pattern.completed / pattern.total) * 100,
   }))
 
-  const difficultyDistribution = data.difficultyTrends[data.difficultyTrends.length - 1]
+  const difficultyDistribution = data.difficultyTrends && data.difficultyTrends.length > 0
+    ? data.difficultyTrends[data.difficultyTrends.length - 1]
+    : { easy: 0, medium: 0, hard: 0 }
   const totalThisMonth = difficultyDistribution.easy + difficultyDistribution.medium + difficultyDistribution.hard
 
   const pieData = [

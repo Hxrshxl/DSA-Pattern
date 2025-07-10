@@ -153,6 +153,35 @@ export default function DashboardPage() {
     }
   }
 
+  // The desired pattern order
+  const PATTERN_ORDER = [
+    "Two Pointers",
+    "Sliding Window",
+    "Prefix Sums",
+    "Merge Intervals",
+    "Binary Search (and Variants)",
+    "Sorting-Based Patterns",
+    "Fast and Slow Pointers",
+    "Backtracking & Recursive Search",
+    "Divide and Conquer",
+    "Linked List Techniques (Dummy Node, In-place Reversal)",
+    "Stacks and Queues",
+    "Monotonic Stack / Queue",
+    "Expression Evaluation (Two Stacks)",
+    "String Manipulation & Regular Expressions",
+    "Hashmaps & Frequency Counting",
+    "Binary Trees & BSTs (Traversal, Construction, Properties)",
+    "Path Sum & Root-to-Leaf Techniques",
+    "Kth Largest/Smallest Elements (Heaps / QuickSelect)",
+    "Top K Frequent Elements",
+    "Merge K Sorted Lists",
+    "Dynamic Programming (Including Knapsack, Range DP, etc.)",
+    "Greedy & Interval Partitioning",
+    "Graph Traversals (BFS, DFS)",
+    "Graph Algorithms (DAGs, MSTs, Shortest Paths, etc.)",
+    "Design Problems (LRU Cache, Twitter, etc.)"
+  ];
+
   if (loading.stats || loadingProblems) {
     return (
       <div className="space-y-8">
@@ -347,257 +376,265 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <Accordion type="multiple" className="space-y-4">
-              {Object.entries(problemsByPattern).map(([pattern, problems]) => {
-                const solvedInPattern = problems.filter((p) => solvedProblems.has(p.id)).length
-                const totalInPattern = problems.length
-                const progressPercentage = (solvedInPattern / totalInPattern) * 100
-
-                return (
-                  <AccordionItem
-                    key={pattern}
-                    value={pattern}
-                    className="border border-white/10 rounded-lg modern-card"
-                  >
-                    <AccordionTrigger className="px-6 py-4 hover:no-underline">
-                      <div className="flex items-center justify-between w-full mr-4">
-                        <div className="flex items-center gap-3">
-                          <Target className="h-5 w-5 text-blue-400" />
-                          <span className="text-white font-medium">{pattern}</span>
+              {/* Sort patterns according to PATTERN_ORDER, then append any not in the list */}
+              {(() => {
+                const allPatterns = Object.keys(problemsByPattern);
+                const orderedPatterns = [
+                  ...PATTERN_ORDER.filter((pattern) => allPatterns.includes(pattern)),
+                  ...allPatterns.filter((pattern) => !PATTERN_ORDER.includes(pattern)),
+                ];
+                return orderedPatterns.map((pattern) => {
+                  const problems = problemsByPattern[pattern];
+                  const solvedInPattern = problems.filter((p) => solvedProblems.has(p.id)).length;
+                  const totalInPattern = problems.length;
+                  const progressPercentage = (solvedInPattern / totalInPattern) * 100;
+                  return (
+                    <AccordionItem
+                      key={pattern}
+                      value={pattern}
+                      className="border border-white/10 rounded-lg modern-card"
+                    >
+                      <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                        <div className="flex items-center justify-between w-full mr-4">
+                          <div className="flex items-center gap-3">
+                            <Target className="h-5 w-5 text-blue-400" />
+                            <span className="text-white font-medium">{pattern}</span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                              {solvedInPattern}/{totalInPattern}
+                            </Badge>
+                            <span className="text-sm text-gray-400">{progressPercentage.toFixed(0)}%</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-                            {solvedInPattern}/{totalInPattern}
-                          </Badge>
-                          <span className="text-sm text-gray-400">{progressPercentage.toFixed(0)}%</span>
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-6 pb-4">
-                      <div className="space-y-3">
-                        {problems.map((problem, index) => (
-                          <div
-                            key={problem.id}
-                            className="p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
-                          >
-                            {/* Main Problem Row */}
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-3">
-                                <Checkbox
-                                  checked={solvedProblems.has(problem.id)}
-                                  onCheckedChange={() => toggleProblemSolved(problem.id)}
-                                  className="border-white/30"
-                                />
-                                <span className="text-sm text-gray-400 font-mono">#{index + 1}</span>
-                                <span
-                                  className={`text-white font-medium ${solvedProblems.has(problem.id) ? "line-through text-gray-500" : ""}`}
-                                >
-                                  {problem.title}
-                                </span>
-                                {problem.isPremium && (
-                                  <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
-                                    Premium
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <Badge variant="outline" className={getDifficultyColor(problem.difficulty)}>
-                                  {problem.difficulty}
-                                </Badge>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => window.open(problem.url, "_blank")}
-                                  className="h-6 w-6 p-0 text-gray-400 hover:text-white"
-                                  title="Open problem"
-                                >
-                                  <ExternalLink className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-
-                            {/* Problem Details */}
-                            <div className="ml-8 space-y-3 text-sm">
-                              {/* Description */}
-                              {problem.description && (
-                                <div>
-                                  <span className="text-gray-400 font-medium">Description: </span>
-                                  <span className="text-gray-300">{problem.description}</span>
-                                </div>
-                              )}
-
-                              {/* Tags */}
-                              {problem.tags && problem.tags.length > 0 && (
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-gray-400 font-medium">Tags: </span>
-                                  {problem.tags.map((tag: string) => (
-                                    <Badge
-                                      key={tag}
-                                      variant="outline"
-                                      className="bg-blue-500/10 text-blue-400 border-blue-500/30 text-xs"
-                                    >
-                                      {tag}
+                      </AccordionTrigger>
+                      <AccordionContent className="px-6 pb-4">
+                        <div className="space-y-3">
+                          {problems.map((problem, index) => (
+                            <div
+                              key={problem.id}
+                              className="p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                            >
+                              {/* Main Problem Row */}
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                  <Checkbox
+                                    checked={solvedProblems.has(problem.id)}
+                                    onCheckedChange={() => toggleProblemSolved(problem.id)}
+                                    className="border-white/30"
+                                  />
+                                  <span className="text-sm text-gray-400 font-mono">#{index + 1}</span>
+                                  <span
+                                    className={`text-white font-medium ${solvedProblems.has(problem.id) ? "line-through text-gray-500" : ""}`}
+                                  >
+                                    {problem.title}
+                                  </span>
+                                  {problem.isPremium && (
+                                    <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
+                                      Premium
                                     </Badge>
-                                  ))}
-                                </div>
-                              )}
-
-                              {/* Stats Row */}
-                              <div className="flex items-center gap-6 text-xs">
-                                {problem.acceptanceRate && (
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-gray-400">Acceptance:</span>
-                                    <span
-                                      className={`font-medium ${
-                                        problem.acceptanceRate > 50
-                                          ? "text-green-400"
-                                          : problem.acceptanceRate > 30
-                                            ? "text-yellow-400"
-                                            : "text-red-400"
-                                      }`}
-                                    >
-                                      {problem.acceptanceRate}%
-                                    </span>
-                                  </div>
-                                )}
-
-                                {typeof problem.frequency === "number" && (
-                                  <FrequencyStars frequency={problem.frequency} />
-                                )}
-
-                                {problem.timeComplexity && (
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-gray-400">Time:</span>
-                                    <span className="text-purple-400 font-mono">{problem.timeComplexity}</span>
-                                  </div>
-                                )}
-
-                                {problem.spaceComplexity && (
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-gray-400">Space:</span>
-                                    <span className="text-purple-400 font-mono">{problem.spaceComplexity}</span>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Companies */}
-                              {problem.companies && problem.companies.length > 0 && (
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-gray-400 font-medium">Companies: </span>
-                                  {problem.companies.slice(0, 5).map((company: string) => (
-                                    <Badge
-                                      key={company}
-                                      variant="outline"
-                                      className="bg-green-500/10 text-green-400 border-green-500/30 text-xs"
-                                    >
-                                      {company}
-                                    </Badge>
-                                  ))}
-                                  {problem.companies.length > 5 && (
-                                    <span className="text-gray-500 text-xs">+{problem.companies.length - 5} more</span>
                                   )}
                                 </div>
-                              )}
-
-                              {/* Solution Approach Hint */}
-                              {problem.approach && (
-                                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <Brain className="h-4 w-4 text-blue-400" />
-                                    <span className="text-blue-400 font-medium text-xs">Approach Hint</span>
-                                  </div>
-                                  <p className="text-gray-300 text-xs leading-relaxed">{problem.approach}</p>
+                                <div className="flex items-center gap-3">
+                                  <Badge variant="outline" className={getDifficultyColor(problem.difficulty)}>
+                                    {problem.difficulty}
+                                  </Badge>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => window.open(problem.url, "_blank")}
+                                    className="h-6 w-6 p-0 text-gray-400 hover:text-white"
+                                    title="Open problem"
+                                  >
+                                    <ExternalLink className="h-3 w-3" />
+                                  </Button>
                                 </div>
-                              )}
-
-                              {/* Key Points */}
-                              {problem.keyPoints && problem.keyPoints.length > 0 && (
-                                <div>
-                                  <span className="text-gray-400 font-medium">Key Points: </span>
-                                  <ul className="list-disc list-inside text-gray-300 space-y-1 mt-1">
-                                    {problem.keyPoints.map((point: string, idx: number) => (
-                                      <li key={idx} className="text-xs">
-                                        {point}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-
-                              {/* Related Problems */}
-                              {problem.relatedProblems && problem.relatedProblems.length > 0 && (
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-gray-400 font-medium">Related: </span>
-                                  {problem.relatedProblems.slice(0, 3).map((related: string) => (
-                                    <Badge
-                                      key={related}
-                                      variant="outline"
-                                      className="bg-purple-500/10 text-purple-400 border-purple-500/30 text-xs"
-                                    >
-                                      {related}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
-
-                              {/* Personal Notes Section */}
-                              <div className="bg-gray-800/50 border border-white/10 rounded-lg p-3">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <BookOpen className="h-4 w-4 text-orange-400" />
-                                  <span className="text-orange-400 font-medium text-xs">Personal Notes</span>
-                                </div>
-                                <textarea
-                                  placeholder="Add your notes, solution approach, or key insights..."
-                                  className="w-full bg-transparent text-gray-300 text-xs placeholder-gray-500 border-none outline-none resize-none"
-                                  rows={2}
-                                  defaultValue={localStorage.getItem(`notes-${problem.id}`) || ""}
-                                  onChange={(e) => localStorage.setItem(`notes-${problem.id}`, e.target.value)}
-                                />
                               </div>
 
-                              {/* Action Buttons */}
-                              <div className="flex items-center gap-2 pt-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => window.open(problem.url, "_blank")}
-                                  className="bg-blue-500/10 text-blue-400 border-blue-500/30 hover:bg-blue-500/20 text-xs h-7"
-                                >
-                                  <ExternalLink className="h-3 w-3 mr-1" />
-                                  Solve
-                                </Button>
+                              {/* Problem Details */}
+                              <div className="ml-8 space-y-3 text-sm">
+                                {/* Description */}
+                                {problem.description && (
+                                  <div>
+                                    <span className="text-gray-400 font-medium">Description: </span>
+                                    <span className="text-gray-300">{problem.description}</span>
+                                  </div>
+                                )}
 
-                                {problem.solutionUrl && (
+                                {/* Tags */}
+                                {problem.tags && problem.tags.length > 0 && (
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-gray-400 font-medium">Tags: </span>
+                                    {problem.tags.map((tag: string) => (
+                                      <Badge
+                                        key={tag}
+                                        variant="outline"
+                                        className="bg-blue-500/10 text-blue-400 border-blue-500/30 text-xs"
+                                      >
+                                        {tag}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Stats Row */}
+                                <div className="flex items-center gap-6 text-xs">
+                                  {problem.acceptanceRate && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-gray-400">Acceptance:</span>
+                                      <span
+                                        className={`font-medium ${
+                                          problem.acceptanceRate > 50
+                                            ? "text-green-400"
+                                            : problem.acceptanceRate > 30
+                                              ? "text-yellow-400"
+                                              : "text-red-400"
+                                        }`}
+                                      >
+                                        {problem.acceptanceRate}%
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {typeof problem.frequency === "number" && (
+                                    <FrequencyStars frequency={problem.frequency} />
+                                  )}
+
+                                  {problem.timeComplexity && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-gray-400">Time:</span>
+                                      <span className="text-purple-400 font-mono">{problem.timeComplexity}</span>
+                                    </div>
+                                  )}
+
+                                  {problem.spaceComplexity && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-gray-400">Space:</span>
+                                      <span className="text-purple-400 font-mono">{problem.spaceComplexity}</span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Companies */}
+                                {problem.companies && problem.companies.length > 0 && (
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-gray-400 font-medium">Companies: </span>
+                                    {problem.companies.slice(0, 5).map((company: string) => (
+                                      <Badge
+                                        key={company}
+                                        variant="outline"
+                                        className="bg-green-500/10 text-green-400 border-green-500/30 text-xs"
+                                      >
+                                        {company}
+                                      </Badge>
+                                    ))}
+                                    {problem.companies.length > 5 && (
+                                      <span className="text-gray-500 text-xs">+{problem.companies.length - 5} more</span>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Solution Approach Hint */}
+                                {problem.approach && (
+                                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <Brain className="h-4 w-4 text-blue-400" />
+                                      <span className="text-blue-400 font-medium text-xs">Approach Hint</span>
+                                    </div>
+                                    <p className="text-gray-300 text-xs leading-relaxed">{problem.approach}</p>
+                                  </div>
+                                )}
+
+                                {/* Key Points */}
+                                {problem.keyPoints && problem.keyPoints.length > 0 && (
+                                  <div>
+                                    <span className="text-gray-400 font-medium">Key Points: </span>
+                                    <ul className="list-disc list-inside text-gray-300 space-y-1 mt-1">
+                                      {problem.keyPoints.map((point: string, idx: number) => (
+                                        <li key={idx} className="text-xs">
+                                          {point}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+
+                                {/* Related Problems */}
+                                {problem.relatedProblems && problem.relatedProblems.length > 0 && (
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-gray-400 font-medium">Related: </span>
+                                    {problem.relatedProblems.slice(0, 3).map((related: string) => (
+                                      <Badge
+                                        key={related}
+                                        variant="outline"
+                                        className="bg-purple-500/10 text-purple-400 border-purple-500/30 text-xs"
+                                      >
+                                        {related}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Personal Notes Section */}
+                                <div className="bg-gray-800/50 border border-white/10 rounded-lg p-3">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <BookOpen className="h-4 w-4 text-orange-400" />
+                                    <span className="text-orange-400 font-medium text-xs">Personal Notes</span>
+                                  </div>
+                                  <textarea
+                                    placeholder="Add your notes, solution approach, or key insights..."
+                                    className="w-full bg-transparent text-gray-300 text-xs placeholder-gray-500 border-none outline-none resize-none"
+                                    rows={2}
+                                    defaultValue={localStorage.getItem(`notes-${problem.id}`) || ""}
+                                    onChange={(e) => localStorage.setItem(`notes-${problem.id}`, e.target.value)}
+                                  />
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex items-center gap-2 pt-2">
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => window.open(problem.solutionUrl, "_blank")}
-                                    className="bg-green-500/10 text-green-400 border-green-500/30 hover:bg-green-500/20 text-xs h-7"
+                                    onClick={() => window.open(problem.url, "_blank")}
+                                    className="bg-blue-500/10 text-blue-400 border-blue-500/30 hover:bg-blue-500/20 text-xs h-7"
                                   >
-                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                    Solution
+                                    <ExternalLink className="h-3 w-3 mr-1" />
+                                    Solve
                                   </Button>
-                                )}
 
-                                {problem.videoUrl && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => window.open(problem.videoUrl, "_blank")}
-                                    className="bg-purple-500/10 text-purple-400 border-purple-500/30 hover:bg-purple-500/20 text-xs h-7"
-                                  >
-                                    <Play className="h-3 w-3 mr-1" />
-                                    Video
-                                  </Button>
-                                )}
+                                  {problem.solutionUrl && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => window.open(problem.solutionUrl, "_blank")}
+                                      className="bg-green-500/10 text-green-400 border-green-500/30 hover:bg-green-500/20 text-xs h-7"
+                                    >
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      Solution
+                                    </Button>
+                                  )}
+
+                                  {problem.videoUrl && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => window.open(problem.videoUrl, "_blank")}
+                                      className="bg-purple-500/10 text-purple-400 border-purple-500/30 hover:bg-purple-500/20 text-xs h-7"
+                                    >
+                                      <Play className="h-3 w-3 mr-1" />
+                                      Video
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )
-              })}
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                });
+              })().map((item) => item)}
             </Accordion>
           </CardContent>
         </Card>

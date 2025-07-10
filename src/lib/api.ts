@@ -8,6 +8,7 @@ import {
   getNotes as dbGetNotes,
   getPatternMastery,
   getWeeklyActivity,
+  getUserDifficultyTrends,
 } from "./database"
 
 export async function getUserProgress(userId: string) {
@@ -23,14 +24,11 @@ export async function getUserGoals(userId: string) {
 }
 
 export async function getUserAnalytics(userId: string) {
-  const [weeklyActivity, patternProgress] = await Promise.all([getWeeklyActivity(userId), getPatternMastery(userId)])
-
-  // Mock difficulty trends for now
-  const difficultyTrends = [
-    { month: "Jan", easy: 20, medium: 15, hard: 5 },
-    { month: "Feb", easy: 25, medium: 18, hard: 7 },
-    { month: "Mar", easy: 30, medium: 22, hard: 10 },
-  ]
+  const [weeklyActivity, patternProgress, difficultyTrends] = await Promise.all([
+    getWeeklyActivity(userId),
+    getPatternMastery(userId),
+    getUserDifficultyTrends(userId),
+  ])
 
   return {
     weeklyActivity,
